@@ -1,0 +1,281 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Gestor de Instrumentos</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;700&display=swap">
+<style>
+/* Concepto: panel de trabajo de una tienda de instrumentos; barra lateral por módulo, tabla principal, formularios en columna. */
+:root{--bg:#f5f6f9;--panel:#fff;--fg:#182844;--mut:#5d6b84;--line:#d9dee8;--navy:#002345;--red:#c8102e;--ok:#1d7a46;--okbg:#e4f3ea;--warn:#8a5a00;--warnbg:#fff1d6;--bad:#b00020;--badbg:#fde7ea;--info:#1d4f91;--infobg:#e3edfa;--font:'Inter',system-ui,sans-serif;--disp:'Space Grotesk','Inter',system-ui,sans-serif}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0f1624;--panel:#18223a;--fg:#e8ecf5;--mut:#9aa7c0;--line:#2c3a58;--navy:#7fb0ff;--red:#ff6b81;--ok:#6fd49a;--okbg:#17352a;--warn:#f0c36a;--warnbg:#3a2f12;--bad:#ff8a9a;--badbg:#3d1a22;--info:#8fb8f5;--infobg:#172b4a;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#0f1624;--panel:#18223a;--fg:#e8ecf5;--mut:#9aa7c0;--line:#2c3a58;--navy:#7fb0ff;--red:#ff6b81;--ok:#6fd49a;--okbg:#17352a;--warn:#f0c36a;--warnbg:#3a2f12;--bad:#ff8a9a;--badbg:#3d1a22;--info:#8fb8f5;--infobg:#172b4a;color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--font);font-size:14px;line-height:1.45;padding-block:0;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+h1,h2,h3{font-family:var(--disp);margin:0;letter-spacing:-.01em}
+h2{font-size:20px}h3{font-size:15px}
+button,input,select,textarea{font:inherit;color:inherit}
+.wrap{max-width:1100px;margin:0 auto;padding-block:16px 32px}
+.top{display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap;margin-bottom:14px}
+.marca{display:flex;align-items:center;gap:10px}
+.logo{width:34px;height:34px;background:var(--navy);color:var(--bg);display:grid;place-items:center;font-family:var(--disp);font-weight:700;border-radius:6px}
+.marca b{font-family:var(--disp);font-size:17px;display:block}.marca small{color:var(--mut)}
+.sesion{display:flex;gap:8px;align-items:center;flex-wrap:wrap;color:var(--mut)}
+.aviso{background:var(--infobg);color:var(--info);padding:8px 12px;border-radius:6px;font-size:13px;margin-bottom:14px}
+.layout{display:grid;grid-template-columns:200px minmax(0,1fr);gap:16px}
+@media(max-width:760px){.layout{grid-template-columns:1fr}}
+nav{display:flex;flex-direction:column;gap:2px}
+@media(max-width:760px){nav{flex-direction:row;overflow-x:auto;padding-bottom:4px}}
+nav a{padding:8px 10px;border-radius:6px;color:var(--fg);text-decoration:none;white-space:nowrap;border-left:3px solid transparent}
+nav a:hover{background:var(--panel)}
+nav a.act{background:var(--panel);border-left-color:var(--red);font-weight:600}
+main{min-width:0}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:16px;margin-bottom:14px}
+.card>h3{margin-bottom:10px}
+.cab{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.tabla{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums}
+th{text-align:left;font-size:12px;text-transform:uppercase;letter-spacing:.04em;color:var(--mut);border-bottom:2px solid var(--line);padding:6px 8px;white-space:nowrap}
+td{padding:7px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+tr.hl td{background:var(--warnbg)}
+.pill{display:inline-block;padding:1px 8px;border-radius:99px;font-size:12px;font-weight:600;white-space:nowrap}
+.p-disponible{background:var(--okbg);color:var(--ok)}.p-arrendado{background:var(--infobg);color:var(--info)}.p-en_mantencion{background:var(--warnbg);color:var(--warn)}.p-de_baja{background:var(--badbg);color:var(--bad)}
+form{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px}
+.campo{display:flex;flex-direction:column;gap:3px;min-width:0}
+.campo label{font-weight:600;font-size:13px}
+input,select,textarea{border:1px solid var(--line);background:var(--bg);border-radius:6px;padding:7px 9px;width:100%}
+input:focus-visible,select:focus-visible,textarea:focus-visible,button:focus-visible,nav a:focus-visible{outline:2px solid var(--red);outline-offset:1px}
+.err{color:var(--bad);font-size:12px;min-height:0}
+.full{grid-column:1/-1}
+.acc{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.btn{background:var(--navy);color:var(--bg);border:0;border-radius:6px;padding:8px 14px;font-weight:600;cursor:pointer}
+.btn.sec{background:transparent;color:var(--fg);border:1px solid var(--line)}
+.btn.sm{padding:3px 9px;font-size:12px}
+.btn.red{background:var(--red);color:#fff}
+.nota{color:var(--mut);font-size:13px}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(16px + env(safe-area-inset-bottom,0px));background:var(--ok);color:#fff;padding:10px 16px;border-radius:8px;max-width:90vw;z-index:20;box-shadow:0 4px 14px rgba(0,0,0,.25)}
+.toast.mal{background:var(--bad)}
+.grid3{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:14px}
+.kpi{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:12px}
+.kpi b{font-family:var(--disp);font-size:26px;display:block;font-variant-numeric:tabular-nums}
+.kpi span{color:var(--mut);font-size:12px}
+.login{max-width:380px;margin:8vh auto}
+.demo{background:var(--bg);border:1px dashed var(--line);border-radius:6px;padding:8px 10px;font-size:13px;margin-top:12px}
+.demo code{font-family:ui-monospace,monospace}
+.tag{font-size:11px;font-weight:700;color:var(--red);letter-spacing:.04em}
+.preview{background:var(--infobg);color:var(--info);padding:8px 12px;border-radius:6px;font-weight:600}
+[hidden]{display:none!important}
+</style>
+
+<div class="wrap" id="app"></div>
+<div id="toast" class="toast" hidden></div>
+
+<script>
+const CLP=n=>'$'+Number(n).toLocaleString('es-CL');
+const hoy=()=>{const d=new Date();d.setHours(12,0,0,0);return d};
+const iso=d=>d.toISOString().slice(0,10);
+const sumar=(n)=>{const d=hoy();d.setDate(d.getDate()+n);return iso(d)};
+const dif=(a,b)=>Math.round((new Date(b+'T12:00')-new Date(a+'T12:00'))/864e5);
+const fechaCL=s=>s?s.split('-').reverse().join('-'):'—';
+const TIPOS={cuerda:'Cuerda',viento:'Viento',percusion:'Percusión',teclado:'Teclado',otro:'Otro'};
+const CONS={nuevo:'Nuevo',bueno:'Bueno',regular:'Regular'};
+const EST={disponible:'Disponible',arrendado:'Arrendado',en_mantencion:'En mantención',de_baja:'De baja'};
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+function semilla(){return{
+ usuarios:[{correo:'admin@tienda.cl',nombre:'Camila Soto',clave:'admin123',rol:'Administrador',activo:true},{correo:'operador@tienda.cl',nombre:'Diego Rojas',clave:'operador123',rol:'Operador',activo:true}],
+ instrumentos:[
+  {serie:'GT-0001',marca:'Fender',modelo:'Stratocaster',tipo:'cuerda',cons:'bueno',tarifa:8000,estado:'arrendado'},
+  {serie:'GT-0002',marca:'Yamaha',modelo:'C40 clásica',tipo:'cuerda',cons:'bueno',tarifa:4500,estado:'disponible'},
+  {serie:'TC-0001',marca:'Roland',modelo:'FP-30X',tipo:'teclado',cons:'nuevo',tarifa:12000,estado:'arrendado'},
+  {serie:'PE-0001',marca:'Pearl',modelo:'Export EXX',tipo:'percusion',cons:'regular',tarifa:10000,estado:'disponible'},
+  {serie:'VI-0001',marca:'Yamaha',modelo:'YFL-222 flauta',tipo:'viento',cons:'bueno',tarifa:5000,estado:'en_mantencion'},
+  {serie:'BJ-0001',marca:'Ibanez',modelo:'SR300E bajo',tipo:'cuerda',cons:'bueno',tarifa:7000,estado:'disponible'},
+  {serie:'TC-0002',marca:'Casio',modelo:'CT-S300',tipo:'teclado',cons:'regular',tarifa:6000,estado:'de_baja'},
+  {serie:'VI-0002',marca:'Jupiter',modelo:'JTR700 trompeta',tipo:'viento',cons:'bueno',tarifa:6500,estado:'disponible'}],
+ clientes:[
+  {rut:'12.345.678-5',nombre:'Ana Pérez',correo:'ana@correo.cl',telefono:'+56 9 1111 2222',consent:true},
+  {rut:'9.876.543-3',nombre:'Luis Fuentes',correo:'luis@correo.cl',telefono:'+56 9 3333 4444',consent:true},
+  {rut:'15.555.555-5',nombre:'Escuela Los Aromos',correo:'musica@losaromos.cl',telefono:'+56 2 2555 0000',consent:true}],
+ arriendos:[
+  {id:1,rut:'12.345.678-5',serie:'GT-0001',inicio:sumar(-3),retorno:sumar(1),total:32000,real:null,entrega:null,obs:''},
+  {id:2,rut:'9.876.543-3',serie:'TC-0001',inicio:sumar(-1),retorno:sumar(4),total:60000,real:null,entrega:null,obs:''}],
+ mantenciones:[{id:1,serie:'VI-0001',tipo:'Reparación',obs:'Cambio de zapatillas',fecha:sumar(-2),proxima:sumar(30),abierta:true},{id:2,serie:'GT-0002',tipo:'Calibración',obs:'Ajuste de cuerdas',fecha:sumar(-40),proxima:sumar(-5),abierta:false}]}}
+let S;try{S=JSON.parse(localStorage.getItem('gi_datos'))}catch(e){}
+if(!S||!S.instrumentos)S=semilla();
+let sesion=null;try{sesion=JSON.parse(sessionStorage.getItem('gi_sesion'))}catch(e){}
+function guardar(){try{localStorage.setItem('gi_datos',JSON.stringify(S))}catch(e){}}
+function toast(m,mal){const t=document.getElementById('toast');t.textContent=m;t.className='toast'+(mal?' mal':'');t.hidden=false;clearTimeout(toast.h);toast.h=setTimeout(()=>t.hidden=true,3800)}
+
+/* RUT chileno: módulo 11 */
+function rutValido(r){const l=r.replace(/[.\-\s]/g,'').toUpperCase();if(!/^\d{7,8}[\dK]$/.test(l))return false;const c=l.slice(0,-1),dv=l.slice(-1);let s=0,m=2;for(let i=c.length-1;i>=0;i--){s+=+c[i]*m;m=m===7?2:m+1}const e=11-(s%11);const d=e===11?'0':e===10?'K':String(e);return d===dv}
+function rutFormato(r){const l=r.replace(/[.\-\s]/g,'').toUpperCase();return l.slice(0,-1).replace(/\B(?=(\d{3})+(?!\d))/g,'.')+'-'+l.slice(-1)}
+
+const RUTAS=[['inicio','Inicio'],['catalogo','Catálogo'],['instrumentos','Instrumentos'],['clientes','Clientes'],['arriendos','Arriendos'],['mantenciones','Mantenciones'],['usuarios','Usuarios'],['informe','Trazabilidad']];
+const esAdmin=()=>sesion&&sesion.rol==='Administrador';
+let ruta='inicio',edit=null;
+function irA(r){ruta=r;edit=null;location.hash=r;pintar()}
+window.addEventListener('hashchange',()=>{const h=location.hash.slice(1);if(RUTAS.some(x=>x[0]===h)&&h!==ruta){ruta=h;edit=null;pintar()}});
+if(RUTAS.some(x=>x[0]===location.hash.slice(1)))ruta=location.hash.slice(1);
+
+function pill(e){return `<span class="pill p-${e}">${EST[e]}</span>`}
+function campo(id,etq,html,ayuda){return `<div class="campo"><label for="${id}">${etq}</label>${html}<div class="err" id="e_${id}"></div>${ayuda?`<div class="nota">${ayuda}</div>`:''}</div>`}
+function errores(map){let hay=false;document.querySelectorAll('.err').forEach(e=>e.textContent='');for(const[k,v]of Object.entries(map)){if(!v)continue;hay=true;const e=document.getElementById('e_'+k);if(e)e.textContent=v}return hay}
+const val=id=>(document.getElementById(id)?.value??'').trim();
+
+/* HU-01 Iniciar sesión */
+function pantallaLogin(){document.getElementById('app').innerHTML=`<div class="login card"><div class="marca" style="margin-bottom:14px"><div class="logo">GI</div><div><b>Gestor de Instrumentos</b><small>Prototipo del proyecto de especialidad</small></div></div>
+<form id="fl" style="grid-template-columns:1fr">${campo('lc','Correo','<input id="lc" type="email" autocomplete="username">')}${campo('lp','Contraseña','<input id="lp" type="password" autocomplete="current-password">')}<div class="acc"><button class="btn" type="submit">Ingresar</button></div></form>
+<div class="demo"><b>Acceso rápido, sin escribir correo</b><div class="acc" style="margin-top:8px"><button class="btn red" type="button" id="rapido_admin">Entrar como Administrador</button><button class="btn sec" type="button" id="rapido_op">Entrar como Operador</button></div><p class="nota" style="margin:8px 0 0">O ingresa con correo: <code>admin@tienda.cl</code> / <code>admin123</code> · <code>operador@tienda.cl</code> / <code>operador123</code></p></div></div>`;
+ document.getElementById('fl').onsubmit=e=>{e.preventDefault();const c=val('lc').toLowerCase(),p=document.getElementById('lp').value;
+  if(errores({lc:c?'':'Ingresa tu correo.',lp:p?'':'Ingresa tu contraseña.'}))return;
+  const u=S.usuarios.find(x=>x.correo===c&&x.clave===p);
+  if(!u){errores({lp:'Correo o contraseña incorrectos.'});return}
+  if(!u.activo){errores({lp:'Este usuario está desactivado.'});return}
+  abrirSesion(u)};
+ document.getElementById('rapido_admin').onclick=()=>abrirSesion(S.usuarios.find(x=>x.rol==='Administrador'&&x.activo)||semilla().usuarios[0]);
+ document.getElementById('rapido_op').onclick=()=>abrirSesion(S.usuarios.find(x=>x.rol==='Operador'&&x.activo)||semilla().usuarios[1])}
+function abrirSesion(u){sesion={correo:u.correo,nombre:u.nombre,rol:u.rol};try{sessionStorage.setItem('gi_sesion',JSON.stringify(sesion))}catch(e){}pintar()}
+
+function pintar(){
+ if(!sesion)return pantallaLogin();
+ const vis=RUTAS.filter(([r])=>r!=='usuarios'||esAdmin());
+ if(!vis.some(([r])=>r===ruta))ruta='inicio';
+ document.getElementById('app').innerHTML=`<div class="top"><div class="marca"><div class="logo">GI</div><div><b>Gestor de Instrumentos</b><small>Inventario, arriendos y mantenciones</small></div></div>
+ <div class="sesion"><span>${esc(sesion.nombre)} · <b>${sesion.rol}</b></span><button class="btn sec sm" id="reset" title="Vuelve a los datos de ejemplo">Restablecer datos</button><button class="btn sec sm" id="salir">Salir</button></div></div>
+ <div class="aviso">Prototipo funcional del informe de análisis. Los datos son de ejemplo y se guardan solo en este navegador.</div>
+ <div class="layout"><nav aria-label="Módulos">${vis.map(([r,t])=>`<a href="#${r}" class="${r===ruta?'act':''}" data-r="${r}">${t}</a>`).join('')}</nav><main id="main"></main></div>`;
+ document.querySelectorAll('nav a').forEach(a=>a.onclick=e=>{e.preventDefault();irA(a.dataset.r)});
+ document.getElementById('salir').onclick=()=>{sesion=null;try{sessionStorage.removeItem('gi_sesion')}catch(e){}pintar()};
+ document.getElementById('reset').onclick=()=>{S=semilla();guardar();toast('Datos de ejemplo restablecidos.');pintar()};
+ ({inicio:vInicio,catalogo:vCatalogo,instrumentos:vInstrumentos,clientes:vClientes,arriendos:vArriendos,mantenciones:vMantenciones,usuarios:vUsuarios,informe:vInforme})[ruta]()}
+const M=h=>document.getElementById('main').innerHTML=h;
+const inst=s=>S.instrumentos.find(i=>i.serie===s);
+const cli=r=>S.clientes.find(c=>c.rut===r);
+const vigentes=()=>S.arriendos.filter(a=>!a.real);
+
+/* Inicio + HU-13 Alertar devolución */
+function vInicio(){
+ const cuenta=e=>S.instrumentos.filter(i=>i.estado===e).length;
+ const manana=sumar(1),porVencer=vigentes().filter(a=>a.retorno===manana),atrasados=vigentes().filter(a=>a.retorno<iso(hoy()));
+ M(`<div class="grid3">${['disponible','arrendado','en_mantencion','de_baja'].map(e=>`<div class="kpi"><b>${cuenta(e)}</b><span>${EST[e]}</span></div>`).join('')}</div>
+ <div class="card"><div class="cab"><h3>Alertas de devolución</h3><span class="tag">HU-13</span></div>
+ ${porVencer.length||atrasados.length?`<div class="tabla"><table><thead><tr><th>Aviso</th><th>Cliente</th><th>Instrumento</th><th>Retorno programado</th><th>Teléfono</th></tr></thead><tbody>
+ ${[...atrasados.map(a=>[a,'Atrasado']),...porVencer.map(a=>[a,'Vence mañana'])].map(([a,t])=>{const c=cli(a.rut),i=inst(a.serie);return `<tr class="hl"><td><b>${t}</b></td><td>${esc(c.nombre)}</td><td>${esc(i.marca+' '+i.modelo)}</td><td>${fechaCL(a.retorno)}</td><td>${esc(c.telefono)}</td></tr>`}).join('')}</tbody></table></div>`:'<p class="nota">No hay arriendos que venzan mañana ni atrasados.</p>'}</div>
+ <div class="card"><h3>Arriendos vigentes</h3>${vigentes().length?`<div class="tabla"><table><thead><tr><th>Cliente</th><th>Instrumento</th><th>Inicio</th><th>Retorno</th><th>Total</th></tr></thead><tbody>${vigentes().map(a=>`<tr><td>${esc(cli(a.rut).nombre)}</td><td>${esc(inst(a.serie).marca+' '+inst(a.serie).modelo)}</td><td>${fechaCL(a.inicio)}</td><td>${fechaCL(a.retorno)}</td><td>${CLP(a.total)}</td></tr>`).join('')}</tbody></table></div>`:'<p class="nota">No hay arriendos vigentes.</p>'}</div>`)}
+
+/* HU-06 Consultar catálogo */
+let filtro={tipo:'',marca:'',estado:''};
+function vCatalogo(){
+ const marcas=[...new Set(S.instrumentos.map(i=>i.marca))].sort();
+ const lista=S.instrumentos.filter(i=>(!filtro.tipo||i.tipo===filtro.tipo)&&(!filtro.marca||i.marca===filtro.marca)&&(!filtro.estado||i.estado===filtro.estado));
+ const op=(o,v)=>Object.entries(o).map(([k,t])=>`<option value="${k}" ${v===k?'selected':''}>${t}</option>`).join('');
+ M(`<div class="card"><div class="cab"><h3>Catálogo de instrumentos</h3><span class="tag">HU-06</span></div>
+ <form id="ff">${campo('ft','Tipo',`<select id="ft"><option value="">Todos</option>${op(TIPOS,filtro.tipo)}</select>`)}${campo('fm','Marca',`<select id="fm"><option value="">Todas</option>${marcas.map(m=>`<option ${filtro.marca===m?'selected':''}>${esc(m)}</option>`).join('')}</select>`)}${campo('fe','Estado',`<select id="fe"><option value="">Todos</option>${op(EST,filtro.estado)}</select>`)}</form>
+ <div class="tabla" style="margin-top:12px">${lista.length?`<table><thead><tr><th>Serie</th><th>Marca y modelo</th><th>Tipo</th><th>Conservación</th><th>Tarifa diaria</th><th>Estado</th></tr></thead><tbody>${lista.map(i=>`<tr><td>${i.serie}</td><td>${esc(i.marca)} ${esc(i.modelo)}</td><td>${TIPOS[i.tipo]}</td><td>${CONS[i.cons]}</td><td>${CLP(i.tarifa)}</td><td>${pill(i.estado)}</td></tr>`).join('')}</tbody></table>`:'<p class="nota">Ningún instrumento coincide con los filtros.</p>'}</div></div>`);
+ ['ft','fm','fe'].forEach(id=>document.getElementById(id).onchange=()=>{filtro={tipo:val('ft'),marca:val('fm'),estado:val('fe')};vCatalogo()})}
+
+/* HU-03 Registrar, HU-04 Modificar, HU-05 Dar de baja */
+function vInstrumentos(){
+ const e=edit?inst(edit):null;const v=k=>e?esc(e[k]):'';
+ const op=(o,s)=>Object.entries(o).map(([k,t])=>`<option value="${k}" ${s===k?'selected':''}>${t}</option>`).join('');
+ M(`<div class="card"><div class="cab"><h3>${e?'Modificar instrumento '+e.serie:'Registrar instrumento'}</h3><span class="tag">${e?'HU-04':'HU-03'}</span></div>
+ <form id="fi" novalidate>${campo('i_serie','Número de serie',`<input id="i_serie" value="${v('serie')}" ${e?'disabled':''} placeholder="Ej.: GT-0003">`)}${campo('i_marca','Marca',`<input id="i_marca" value="${v('marca')}">`)}${campo('i_modelo','Modelo',`<input id="i_modelo" value="${v('modelo')}">`)}
+ ${campo('i_tipo','Tipo',`<select id="i_tipo"><option value="">Seleccionar</option>${op(TIPOS,e?.tipo)}</select>`)}${campo('i_cons','Estado de conservación',`<select id="i_cons"><option value="">Seleccionar</option>${op(CONS,e?.cons)}</select>`)}${campo('i_tarifa','Tarifa diaria (CLP)',`<input id="i_tarifa" type="number" min="0" value="${v('tarifa')}">`)}
+ <div class="full acc"><button class="btn" type="submit">Guardar</button><button class="btn sec" type="button" id="i_cancel">Cancelar</button>${e?'':'<span class="nota">El estado se asigna solo: Disponible.</span>'}</div></form></div>
+ <div class="card"><h3>Inventario</h3><div class="tabla"><table><thead><tr><th>Serie</th><th>Instrumento</th><th>Tarifa</th><th>Estado</th><th>Acciones</th></tr></thead><tbody>${S.instrumentos.map(i=>`<tr><td>${i.serie}</td><td>${esc(i.marca)} ${esc(i.modelo)}</td><td>${CLP(i.tarifa)}</td><td>${pill(i.estado)}</td><td class="acc"><button class="btn sec sm" data-ed="${i.serie}">Modificar</button>${esAdmin()&&i.estado!=='de_baja'?`<button class="btn sec sm" data-baja="${i.serie}">Dar de baja</button>`:''}</td></tr>`).join('')}</tbody></table></div><p class="nota">Dar de baja es solo para administradores (HU-05) y no borra el historial.</p></div>`);
+ document.getElementById('i_cancel').onclick=()=>{edit=null;vInstrumentos()};
+ document.querySelectorAll('[data-ed]').forEach(b=>b.onclick=()=>{edit=b.dataset.ed;vInstrumentos();window.scrollTo(0,0)});
+ document.querySelectorAll('[data-baja]').forEach(b=>b.onclick=()=>{const i=inst(b.dataset.baja);if(i.estado==='arrendado'){toast('No se puede dar de baja un instrumento arrendado.',1);return}i.estado='de_baja';guardar();toast('Instrumento dado de baja. Su historial se conserva.');vInstrumentos()});
+ document.getElementById('fi').onsubmit=ev=>{ev.preventDefault();
+  const d={serie:e?e.serie:val('i_serie').toUpperCase(),marca:val('i_marca'),modelo:val('i_modelo'),tipo:val('i_tipo'),cons:val('i_cons'),tarifa:val('i_tarifa')};
+  const req='Este campo es obligatorio.';
+  const er={i_serie:d.serie?(!e&&inst(d.serie)?'Ya existe un instrumento con ese número de serie.':''):req,i_marca:d.marca?'':req,i_modelo:d.modelo?'':req,i_tipo:d.tipo?'':req,i_cons:d.cons?'':req,i_tarifa:d.tarifa===''?req:(+d.tarifa<=0?'La tarifa diaria debe ser mayor que 0.':'')};
+  if(errores(er))return;
+  d.tarifa=+d.tarifa;
+  if(e){Object.assign(e,d);toast('Instrumento actualizado.')}else{S.instrumentos.push({...d,estado:'disponible'});toast(`Instrumento ${d.serie} registrado correctamente.`)}
+  guardar();edit=null;ruta=e?'instrumentos':'catalogo';if(!e)location.hash='catalogo';pintar()}}
+
+/* HU-07 Registrar cliente */
+function vClientes(){
+ M(`<div class="card"><div class="cab"><h3>Registrar cliente</h3><span class="tag">HU-07</span></div>
+ <form id="fc" novalidate>${campo('c_rut','RUT','<input id="c_rut" placeholder="12.345.678-5">')}${campo('c_nom','Nombre','<input id="c_nom">')}${campo('c_cor','Correo','<input id="c_cor" type="email">')}${campo('c_tel','Teléfono','<input id="c_tel" placeholder="+56 9 ...">')}
+ <div class="campo full"><label><input id="c_con" type="checkbox" style="width:auto"> El cliente autoriza el uso de sus datos personales</label><div class="err" id="e_c_con"></div></div>
+ <div class="full acc"><button class="btn" type="submit">Guardar</button></div></form></div>
+ <div class="card"><h3>Clientes registrados</h3><div class="tabla"><table><thead><tr><th>RUT</th><th>Nombre</th><th>Correo</th><th>Teléfono</th></tr></thead><tbody>${S.clientes.map(c=>`<tr><td>${c.rut}</td><td>${esc(c.nombre)}</td><td>${esc(c.correo)}</td><td>${esc(c.telefono)}</td></tr>`).join('')}</tbody></table></div></div>`);
+ document.getElementById('fc').onsubmit=ev=>{ev.preventDefault();const req='Este campo es obligatorio.';
+  const rut=val('c_rut'),cor=val('c_cor').toLowerCase();
+  const er={c_rut:!rut?req:!rutValido(rut)?'El RUT no es válido.':cli(rutFormato(rut))?'Ya existe un cliente con ese RUT.':'',c_nom:val('c_nom')?'':req,c_cor:!cor?req:!/^\S+@\S+\.\S+$/.test(cor)?'El correo no es válido.':'',c_tel:val('c_tel')?'':req,c_con:document.getElementById('c_con').checked?'':'Sin el consentimiento no se puede guardar al cliente.'};
+  if(errores(er))return;
+  S.clientes.push({rut:rutFormato(rut),nombre:val('c_nom'),correo:cor,telefono:val('c_tel'),consent:true});guardar();toast('Cliente registrado correctamente.');vClientes()}}
+
+/* HU-08 Registrar arriendo, HU-09 Validar disponibilidad, HU-10 Registrar devolución */
+function hayCruce(serie,ini,ret){return S.arriendos.find(a=>a.serie===serie&&!a.real&&ini<=a.retorno&&ret>=a.inicio)}
+function vArriendos(){
+ const libres=S.instrumentos.filter(i=>i.estado==='disponible');
+ M(`<div class="card"><div class="cab"><h3>Registrar arriendo</h3><span class="tag">HU-08 · HU-09</span></div>
+ <form id="fa" novalidate>${campo('a_cli','Cliente',`<select id="a_cli"><option value="">Seleccionar</option>${S.clientes.map(c=>`<option value="${c.rut}">${esc(c.nombre)} (${c.rut})</option>`).join('')}</select>`)}
+ ${campo('a_ins','Instrumento',`<select id="a_ins"><option value="">Seleccionar</option>${S.instrumentos.map(i=>`<option value="${i.serie}">${esc(i.marca+' '+i.modelo)} · ${i.serie} · ${EST[i.estado]}</option>`).join('')}</select>`,'Solo se puede arrendar un instrumento disponible.')}
+ ${campo('a_ini','Fecha de inicio',`<input id="a_ini" type="date" value="${iso(hoy())}">`)}${campo('a_ret','Fecha de retorno programada','<input id="a_ret" type="date">')}
+ <div class="full"><div class="preview" id="a_prev">La tarifa total se calcula automáticamente.</div></div>
+ <div class="full acc"><button class="btn" type="submit">Guardar</button><button class="btn sec" type="reset" id="a_can">Cancelar</button></div></form></div>
+ <div class="card"><div class="cab"><h3>Registrar devolución</h3><span class="tag">HU-10</span></div>
+ ${vigentes().length?`<form id="fd" novalidate>${campo('d_ar','Arriendo vigente',`<select id="d_ar"><option value="">Seleccionar</option>${vigentes().map(a=>`<option value="${a.id}">${esc(cli(a.rut).nombre)} · ${esc(inst(a.serie).marca+' '+inst(a.serie).modelo)} (retorno ${fechaCL(a.retorno)})</option>`).join('')}</select>`)}
+ ${campo('d_fec','Fecha de retorno real',`<input id="d_fec" type="date" value="${iso(hoy())}">`)}${campo('d_ent','Estado de entrega',`<select id="d_ent"><option value="">Seleccionar</option><option>Sin daños</option><option>Con daños leves</option><option>Con daños graves</option></select>`)}
+ ${campo('d_obs','Observaciones','<input id="d_obs">')}<div class="full acc"><button class="btn" type="submit">Registrar devolución</button></div></form>`:'<p class="nota">No hay arriendos vigentes para devolver.</p>'}</div>
+ <div class="card"><h3>Historial de arriendos</h3><div class="tabla"><table><thead><tr><th>Cliente</th><th>Instrumento</th><th>Inicio</th><th>Retorno prog.</th><th>Retorno real</th><th>Total</th><th>Entrega</th></tr></thead><tbody>${[...S.arriendos].reverse().map(a=>`<tr><td>${esc(cli(a.rut).nombre)}</td><td>${esc(inst(a.serie).marca+' '+inst(a.serie).modelo)}</td><td>${fechaCL(a.inicio)}</td><td>${fechaCL(a.retorno)}</td><td>${fechaCL(a.real)}</td><td>${CLP(a.total)}</td><td>${a.entrega?esc(a.entrega):'Vigente'}</td></tr>`).join('')}</tbody></table></div></div>`);
+ const prev=()=>{const i=inst(val('a_ins')),a=val('a_ini'),r=val('a_ret'),p=document.getElementById('a_prev');
+  if(i&&a&&r&&r>=a){const d=Math.max(1,dif(a,r));p.textContent=`${d} día${d>1?'s':''} × ${CLP(i.tarifa)} = ${CLP(d*i.tarifa)}`}else p.textContent='La tarifa total se calcula automáticamente.'};
+ ['a_ins','a_ini','a_ret'].forEach(id=>document.getElementById(id).oninput=prev);
+ document.getElementById('a_can').onclick=()=>setTimeout(()=>{vArriendos()},0);
+ document.getElementById('fa').onsubmit=ev=>{ev.preventDefault();const req='Este campo es obligatorio.';
+  const c=val('a_cli'),s=val('a_ins'),a=val('a_ini'),r=val('a_ret'),i=inst(s);
+  const er={a_cli:c?'':req,a_ins:!s?req:(i.estado!=='disponible'?`El instrumento no está disponible (estado actual: ${EST[i.estado]}).`:''),a_ini:a?'':req,a_ret:!r?req:(a&&r<a?'La fecha de retorno no puede ser anterior a la fecha de inicio.':'')};
+  if(!er.a_ins&&!er.a_ret&&s&&a&&r){const x=hayCruce(s,a,r);if(x)er.a_ret=`Las fechas se cruzan con otra reserva (${fechaCL(x.inicio)} a ${fechaCL(x.retorno)}).`}
+  if(errores(er))return;
+  const d=Math.max(1,dif(a,r)),total=d*i.tarifa;
+  S.arriendos.push({id:Math.max(0,...S.arriendos.map(x=>x.id))+1,rut:c,serie:s,inicio:a,retorno:r,total,real:null,entrega:null,obs:''});i.estado='arrendado';guardar();
+  toast(`Arriendo registrado. Tarifa total: ${CLP(total)}`);vArriendos()};
+ const fd=document.getElementById('fd');if(fd)fd.onsubmit=ev=>{ev.preventDefault();const req='Este campo es obligatorio.';
+  const a=S.arriendos.find(x=>x.id===+val('d_ar'));
+  if(errores({d_ar:a?'':req,d_fec:val('d_fec')?'':req,d_ent:val('d_ent')?'':req}))return;
+  if(val('d_fec')<a.inicio){errores({d_fec:'La fecha real no puede ser anterior al inicio del arriendo.'});return}
+  a.real=val('d_fec');a.entrega=val('d_ent');a.obs=val('d_obs');inst(a.serie).estado='disponible';guardar();
+  toast('Devolución registrada. El instrumento vuelve a estar disponible.'+(a.entrega!=='Sin daños'?' Los daños quedaron anotados.':''));vArriendos()}}
+
+/* HU-11 Registrar mantención, HU-12 Consultar mantenciones */
+function vMantenciones(){
+ const libres=S.instrumentos.filter(i=>i.estado!=='arrendado'&&i.estado!=='de_baja'&&i.estado!=='en_mantencion');
+ const filas=S.instrumentos.map(i=>{const ms=S.mantenciones.filter(m=>m.serie===i.serie).sort((a,b)=>a.fecha<b.fecha?1:-1);return{i,ult:ms[0],ab:ms.find(m=>m.abierta)}});
+ M(`<div class="card"><div class="cab"><h3>Registrar mantención</h3><span class="tag">HU-11</span></div>
+ <form id="fm2" novalidate>${campo('m_ins','Instrumento',`<select id="m_ins"><option value="">Seleccionar</option>${S.instrumentos.map(i=>`<option value="${i.serie}">${esc(i.marca+' '+i.modelo)} · ${i.serie} · ${EST[i.estado]}</option>`).join('')}</select>`)}
+ ${campo('m_tip','Tipo',`<select id="m_tip"><option value="">Seleccionar</option><option>Calibración</option><option>Ajuste</option><option>Reparación</option></select>`)}${campo('m_prox','Próxima mantención','<input id="m_prox" type="date">')}${campo('m_obs','Observaciones','<input id="m_obs">')}
+ <div class="full acc"><button class="btn" type="submit">Guardar</button><span class="nota">Al guardar, el instrumento pasa a En mantención y no se puede arrendar.</span></div></form></div>
+ <div class="card"><div class="cab"><h3>Panel de mantenciones</h3><span class="tag">HU-12</span></div><div class="tabla"><table><thead><tr><th>Instrumento</th><th>Última mantención</th><th>Próxima</th><th>Estado</th><th></th></tr></thead><tbody>${filas.map(({i,ult,ab})=>{const venc=ult&&ult.proxima<iso(hoy());return `<tr class="${venc?'hl':''}"><td>${esc(i.marca)} ${esc(i.modelo)}<br><span class="nota">${i.serie}</span></td><td>${ult?fechaCL(ult.fecha)+'<br><span class="nota">'+esc(ult.tipo)+'</span>':'Sin registro'}</td><td>${ult?fechaCL(ult.proxima)+(venc?' <b>(vencida)</b>':''):'—'}</td><td>${pill(i.estado)}</td><td>${ab?`<button class="btn sec sm" data-fin="${ab.id}">Finalizar</button>`:''}</td></tr>`}).join('')}</tbody></table></div></div>`);
+ document.getElementById('fm2').onsubmit=ev=>{ev.preventDefault();const req='Este campo es obligatorio.';const s=val('m_ins'),i=inst(s);
+  const er={m_ins:!s?req:(i.estado==='arrendado'?'El instrumento está arrendado: registra primero su devolución.':i.estado==='de_baja'?'El instrumento está de baja.':''),m_tip:val('m_tip')?'':req,m_prox:!val('m_prox')?req:(val('m_prox')<=iso(hoy())?'La próxima mantención debe ser una fecha futura.':'')};
+  if(errores(er))return;
+  S.mantenciones.push({id:Math.max(0,...S.mantenciones.map(x=>x.id))+1,serie:s,tipo:val('m_tip'),obs:val('m_obs'),fecha:iso(hoy()),proxima:val('m_prox'),abierta:true});i.estado='en_mantencion';guardar();toast('Mantención registrada. El instrumento quedó En mantención.');vMantenciones()};
+ document.querySelectorAll('[data-fin]').forEach(b=>b.onclick=()=>{const m=S.mantenciones.find(x=>x.id===+b.dataset.fin);m.abierta=false;inst(m.serie).estado='disponible';guardar();toast('Mantención finalizada. El instrumento vuelve a estar disponible.');vMantenciones()})}
+
+/* HU-02 Registrar usuario (solo administrador) */
+function vUsuarios(){
+ M(`<div class="card"><div class="cab"><h3>Registrar usuario</h3><span class="tag">HU-02</span></div>
+ <form id="fu" novalidate>${campo('u_nom','Nombre','<input id="u_nom">')}${campo('u_cor','Correo','<input id="u_cor" type="email">')}${campo('u_cla','Contraseña inicial','<input id="u_cla" type="password">')}${campo('u_rol','Rol','<select id="u_rol"><option value="">Seleccionar</option><option>Administrador</option><option>Operador</option></select>')}
+ <div class="full acc"><button class="btn" type="submit">Guardar</button></div></form></div>
+ <div class="card"><h3>Usuarios</h3><div class="tabla"><table><thead><tr><th>Nombre</th><th>Correo</th><th>Rol</th><th>Estado</th><th></th></tr></thead><tbody>${S.usuarios.map(u=>`<tr><td>${esc(u.nombre)}</td><td>${esc(u.correo)}</td><td>${u.rol}</td><td>${u.activo?'Activo':'Desactivado'}</td><td>${u.correo!==sesion.correo?`<button class="btn sec sm" data-act="${u.correo}">${u.activo?'Desactivar':'Activar'}</button>`:''}</td></tr>`).join('')}</tbody></table></div></div>`);
+ document.getElementById('fu').onsubmit=ev=>{ev.preventDefault();const req='Este campo es obligatorio.';const c=val('u_cor').toLowerCase();
+  if(errores({u_nom:val('u_nom')?'':req,u_cor:!c?req:S.usuarios.some(u=>u.correo===c)?'Ya existe un usuario con ese correo.':'',u_cla:val('u_cla')?'':req,u_rol:val('u_rol')?'':req}))return;
+  S.usuarios.push({correo:c,nombre:val('u_nom'),clave:document.getElementById('u_cla').value,rol:val('u_rol'),activo:true});guardar();toast('Usuario registrado correctamente.');vUsuarios()};
+ document.querySelectorAll('[data-act]').forEach(b=>b.onclick=()=>{const u=S.usuarios.find(x=>x.correo===b.dataset.act);u.activo=!u.activo;guardar();vUsuarios()})}
+
+/* Trazabilidad con el informe */
+function vInforme(){
+ const T=[['HU-01','Iniciar sesión','Pantalla de ingreso','Operador','inicio'],['HU-02','Registrar usuario','Usuarios','Administrador','usuarios'],['HU-03','Registrar instrumento','Instrumentos','Operador','instrumentos'],['HU-04','Modificar instrumento','Instrumentos › Modificar','Operador','instrumentos'],['HU-05','Dar de baja instrumento','Instrumentos › Dar de baja','Administrador','instrumentos'],['HU-06','Consultar catálogo','Catálogo','Operador','catalogo'],['HU-07','Registrar cliente','Clientes','Operador','clientes'],['HU-08','Registrar arriendo','Arriendos','Operador','arriendos'],['HU-09','Validar disponibilidad','Arriendos (validación al guardar)','Operador','arriendos'],['HU-10','Registrar devolución','Arriendos › Devolución','Operador','arriendos'],['HU-11','Registrar mantención','Mantenciones','Operador','mantenciones'],['HU-12','Consultar mantenciones','Mantenciones › Panel','Administrador','mantenciones'],['HU-13','Alertar devolución','Inicio › Alertas','Operador','inicio']];
+ M(`<div class="card"><div class="cab"><h3>Historias de usuario del informe y su pantalla</h3></div><p class="nota">Cada historia del informe de análisis tiene su pantalla. Usa el enlace para abrirla.</p>
+ <div class="tabla"><table><thead><tr><th>Historia</th><th>Nombre</th><th>Dónde está</th><th>Rol</th><th></th></tr></thead><tbody>${T.map(t=>`<tr><td><b>${t[0]}</b></td><td>${t[1]}</td><td>${t[2]}</td><td>${t[3]}</td><td><a href="#${t[4]}" data-go="${t[4]}">Abrir</a></td></tr>`).join('')}</tbody></table></div></div>
+ <div class="card"><h3>Qué probar</h3><p class="nota">1) Registra un instrumento con una serie repetida y verás el aviso. 2) Arrienda un instrumento disponible: se calcula la tarifa y pasa a Arrendado. 3) Intenta arrendarlo de nuevo: se rechaza. 4) Registra su devolución: vuelve a Disponible. 5) Mira en Inicio las alertas de arriendos que vencen mañana.</p></div>`);
+ document.querySelectorAll('[data-go]').forEach(a=>a.onclick=e=>{e.preventDefault();irA(a.dataset.go)})}
+
+pintar();
+</script>
+
+</html>
